@@ -1,0 +1,45 @@
+#!/usr/bin/python3
+# -*- coding: utf-8; tab-width: 4; indent-tabs-mode: t -*-
+
+import sys
+import argparse
+sys.path.append('/usr/lib/fpemud-portal')
+from fwp_param import FwpParam
+from fwp_cmd import FwpCmd
+from fwp_daemon import FwpDaemon
+
+
+def parseArgs():
+    argParser = argparse.ArgumentParser()
+    subParsers = argParser.add_subparsers()
+
+    apInit = subParsers.add_parser("init")
+    apInit.set_defaults(subcmd="init")
+
+    apDaemon = subParsers.add_parser("run")
+    apDaemon.set_defaults(subcmd="run")
+
+    return argParser.parse_args()
+
+
+def usage():
+    raise Exception("no command specified")
+
+
+################################################################################
+
+
+param = FwpParam()
+args = parseArgs()
+
+if args.subcmd == "init":
+    obj = FwpCmd(param)
+    obj.cmdUpdate()
+    sys.exit(0)
+
+if args.subcmd == "run":
+    obj = FwpDaemon(param)
+    obj.run()
+    sys.exit(0)
+
+raise Exception("Invalid command")

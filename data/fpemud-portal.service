@@ -1,0 +1,9 @@
+[Unit]
+Description=Web Portal for Fpemud
+After=network.target
+
+[Service]
+ExecStart=/usr/sbin/fpemud-portal
+
+[Install]
+WantedBy=multi-user.target
