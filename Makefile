@@ -23,9 +23,12 @@ install:
 	install -d -m 0755 "$(DESTDIR)/$(prefix)/lib/systemd/system"
 	install -m 0644 data/fpemud-portal.service "$(DESTDIR)/$(prefix)/lib/systemd/system"
 
+	install -d -m 0755 "$(DESTDIR)/var/fpemud-portal"
+
 uninstall:
 	rm -f "$(DESTDIR)/$(prefix)/sbin/fpemud-portal"
 	rm -f "$(DESTDIR)/$(prefix)/lib/systemd/system/fpemud-portal.service"
 	rm -rf "$(DESTDIR)/$(prefix)/lib/fpemud-portal"
+	rm -rf "$(DESTDIR)/var/fpemud-portal"
 
 .PHONY: all clean install uninstall

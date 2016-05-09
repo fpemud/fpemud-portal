@@ -67,6 +67,7 @@ class FwpDaemon:
         buf += "LoadModule alias_module           /usr/lib/apache2/modules/mod_alias.so\n"
         buf += "LoadModule cgi_module             /usr/lib/apache2/modules/mod_cgi.so\n"
         buf += "\n"
+        buf += "LoadModule rewrite_module         /usr/lib/apache2/modules/mod_rewrite.so\n"
         buf += "LoadModule ssl_module             /usr/lib/apache2/modules/mod_ssl.so\n"
         buf += "LoadModule auth_basic_module      /usr/lib/apache2/modules/mod_auth_basic.so\n"
         buf += "LoadModule authn_core_module      /usr/lib/apache2/modules/mod_authn_core.so\n"
@@ -83,25 +84,35 @@ class FwpDaemon:
         buf += "LogFormat \"%h %l %u %t \\\"%r\\\" %>s %b \\\"%{Referer}i\\\" \\\"%{User-Agent}i\\\"\" common\n"
         buf += "CustomLog \"%s\" common\n" % (os.path.join(apacheDir, "access.log"))
         buf += "\n"
-        buf += "User fpemud-portal\n"
-        buf += "Group fpemud-portal\n"
+        buf += "User %s\n" % (self.param.user)
+        buf += "Group %s\n" % (self.param.group)
         buf += "\n"
-        buf += "Listen %d https\n" % (self.param.listenPort)
-        buf += "\n"
-        buf += "SSLEngine on\n"
-        buf += "SSLProtocol all\n"
-        buf += "SSLCertificateFile \"%s\"\n" % (self.param.certFile)
-        buf += "SSLCertificateKeyFile \"%s\"\n" % (self.param.privkeyFile)
-        buf += "\n"
-        buf += "<Directory \"%s\">\n" % (self.param.shareDir)
-        buf += "    AuthType Basic\n"
-        buf += "    AuthName \"Web Portal for Fpemud\"\n"
-        buf += "    AuthBasicProvider file\n"
-        buf += "    AuthUserFile \"%s\"\n" % (self.param.htpasswdFile)
-        buf += "    Require valid-user\n"
-        buf += "</Directory>\n"
-        buf += "\n"
-        cfgf = os.path.join(apacheDir, "apache.conf")
+        if self.param.httpRedirect:
+            buf += "Listen 80 http\n"
+            buf += "\n"
+            buf += "<VirtualHost *:80>\n"
+            buf += "    RewriteEngine On\n"
+            buf += "    RewriteCond %{HTTPS} off\n"
+            buf += "    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI}\n"
+            buf += "</VirtualHost>\n"
+        if True:
+            buf += "Listen 443 https\n"
+            buf += "\n"
+            buf += "<VirtualHost *:443>\n"
+            buf += "    SSLEngine on\n"
+            buf += "    SSLProtocol all\n"
+            buf += "    SSLCertificateFile \"%s\"\n" % (self.param.certFile)
+            buf += "    SSLCertificateKeyFile \"%s\"\n" % (self.param.privkeyFile)
+            buf += "    \n"
+            buf += "    <Directory \"%s\">\n" % (self.param.shareDir)
+            buf += "        AuthType Basic\n"
+            buf += "        AuthName \"Web Portal for Fpemud\"\n"
+            buf += "        AuthBasicProvider file\n"
+            buf += "        AuthUserFile \"%s\"\n" % (self.param.htpasswdFile)
+            buf += "        Require valid-user\n"
+            buf += "    </Directory>\n"
+            buf += "</VirtualHost>\n"
+        cfgf = os.path.join(apacheDir, "httpd.conf")
         with open(cfgf, "w") as f:
             f.write(buf)
 

@@ -12,12 +12,15 @@ class FwpParam:
         self.varDir = "/var/fpemud-portal"
         self.tmpDir = "/tmp/fpemud-portal"
 
+        self.user = "fpemud-portal"
+        self.group = "fpemud-portal"
+
         self.caCertFile = os.path.join(self.varDir, "ca-cert.pem")
         self.caPrivkeyFile = os.path.join(self.varDir, "ca-prikey.pem")
         self.certFile = os.path.join(self.varDir, "cert.pem")
         self.privkeyFile = os.path.join(self.varDir, "prikey.pem")
         self.htpasswdFile = os.path.join(self.varDir, "htpasswd")
 
-        self.listenPort = 443
+        self.httpRedirect = True
 
         self.mainloop = None

@@ -8,25 +8,27 @@ import socket
 import fcntl
 import struct
 import shutil
-import crypto
 import tempfile
 import ipaddress
 import subprocess
+from OpenSSL import crypto
 
 
 class FwpUtil:
 
     @staticmethod
-    def dumpCertAndKey(self, cert, key, certFile, keyFile):
-        with open(certFile, "wt") as f:
+    def dumpCertAndKey(cert, key, certFile, keyFile, user, group):
+        with open(certFile, "wb") as f:
             buf = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
             f.write(buf)
             os.fchmod(f.fileno(), 0o644)
+        FwpUtil.shell("/bin/chown %s:%s %s" % (user, group, certFile))
 
-        with open(keyFile, "wt") as f:
+        with open(keyFile, "wb") as f:
             buf = crypto.dump_privatekey(crypto.FILETYPE_PEM, key)
             f.write(buf)
             os.fchmod(f.fileno(), 0o600)
+        FwpUtil.shell("/bin/chown %s:%s %s" % (user, group, keyFile))
 
     @staticmethod
     def forceDelete(filename):
