@@ -6,6 +6,7 @@ import sys
 import signal
 import shutil
 import logging
+import socket
 import subprocess
 from gi.repository import GLib
 from fwp_util import FwpUtil
@@ -61,11 +62,10 @@ class FwpDaemon:
 
         # generate apache config file
         buf = ""
+        buf += "LoadModule alias_module           /usr/lib/apache2/modules/mod_alias.so\n"
         buf += "LoadModule log_config_module      /usr/lib/apache2/modules/mod_log_config.so\n"
         buf += "LoadModule env_module             /usr/lib/apache2/modules/mod_env.so\n"
         buf += "LoadModule unixd_module           /usr/lib/apache2/modules/mod_unixd.so\n"
-        buf += "LoadModule alias_module           /usr/lib/apache2/modules/mod_alias.so\n"
-        buf += "LoadModule cgi_module             /usr/lib/apache2/modules/mod_cgi.so\n"
         buf += "\n"
         buf += "LoadModule rewrite_module         /usr/lib/apache2/modules/mod_rewrite.so\n"
         buf += "LoadModule ssl_module             /usr/lib/apache2/modules/mod_ssl.so\n"
@@ -75,8 +75,10 @@ class FwpDaemon:
         buf += "LoadModule authz_core_module      /usr/lib/apache2/modules/mod_authz_core.so\n"
         buf += "LoadModule authz_user_module      /usr/lib/apache2/modules/mod_authz_user.so\n"
         buf += "\n"
+        buf += "LoadModule passenger_module       /usr/lib/apache2/modules/mod_passenger.so\n"
         buf += "\n"
-        buf += "ServerName $(hostname)\n"
+        buf += "\n"
+        buf += "ServerName %s\n" % (socket.gethostname())
         buf += "DocumentRoot \"%s\"\n" % (self.param.shareDir)
         buf += "\n"
         buf += "PidFile \"%s\"\n" % (os.path.join(apacheDir, "apache.pid"))
@@ -86,6 +88,15 @@ class FwpDaemon:
         buf += "\n"
         buf += "User %s\n" % (self.param.user)
         buf += "Group %s\n" % (self.param.group)
+        buf += "\n"
+        buf += "PassengerRoot /usr/lib64/ruby/vendor_ruby/phusion_passenger/locations.ini\n"
+        buf += "PassengerDefaultRuby /usr/bin/ruby\n"
+
+#RailsBaseURI /gitlab
+#<Directory /var/www/gitlab>
+#    Options -MultiViews
+#</Directory>
+
         buf += "\n"
         if self.param.httpRedirect:
             buf += "Listen 80 http\n"
@@ -105,6 +116,7 @@ class FwpDaemon:
             buf += "    SSLCertificateKeyFile \"%s\"\n" % (self.param.privkeyFile)
             buf += "    \n"
             buf += "    <Directory \"%s\">\n" % (self.param.shareDir)
+            buf += "        AllowOverride None\n"
             buf += "        AuthType Basic\n"
             buf += "        AuthName \"Web Portal for Fpemud\"\n"
             buf += "        AuthBasicProvider file\n"
