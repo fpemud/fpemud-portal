@@ -34,7 +34,7 @@ args = parseArgs()
 
 if args.subcmd == "init":
     obj = FwpCmd(param)
-    obj.cmdUpdate()
+    obj.cmdInit()
     sys.exit(0)
 
 if args.subcmd == "run":

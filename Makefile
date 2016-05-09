@@ -15,6 +15,11 @@ install:
 	find "$(DESTDIR)/$(prefix)/lib/fpemud-portal" -type f | xargs chmod 644
 	find "$(DESTDIR)/$(prefix)/lib/fpemud-portal" -type d | xargs chmod 755
 
+	install -d -m 0755 "$(DESTDIR)/$(prefix)/share/fpemud-portal"
+	cp -r share/* "$(DESTDIR)/$(prefix)/share/fpemud-portal"
+	find "$(DESTDIR)/$(prefix)/share/fpemud-portal" -type f | xargs chmod 644
+	find "$(DESTDIR)/$(prefix)/share/fpemud-portal" -type d | xargs chmod 755
+
 	install -d -m 0755 "$(DESTDIR)/$(prefix)/lib/systemd/system"
 	install -m 0644 data/fpemud-portal.service "$(DESTDIR)/$(prefix)/lib/systemd/system"
 

@@ -56,14 +56,14 @@ class FwpDaemon:
 
     def _runApache(self):
         # make apache root directory
-        apacheDir = os.path.join(self.param.tmpDir, "apache") 
+        apacheDir = os.path.join(self.param.tmpDir, "apache")
         os.mkdir(apacheDir)
 
         # generate apache config file
         buf = ""
         buf += "LoadModule log_config_module      /usr/lib/apache2/modules/mod_log_config.so\n"
         buf += "LoadModule env_module             /usr/lib/apache2/modules/mod_env.so\n"
-        buf += "LoadModule unixd_module           /usr/lib/apache2/modules/mod_unixd.so\n"	
+        buf += "LoadModule unixd_module           /usr/lib/apache2/modules/mod_unixd.so\n"
         buf += "LoadModule alias_module           /usr/lib/apache2/modules/mod_alias.so\n"
         buf += "LoadModule cgi_module             /usr/lib/apache2/modules/mod_cgi.so\n"
         buf += "\n"
@@ -75,10 +75,10 @@ class FwpDaemon:
         buf += "LoadModule authz_user_module      /usr/lib/apache2/modules/mod_authz_user.so\n"
         buf += "\n"
         buf += "\n"
-        buf += "ServerName $(hostname)\n"        
-        buf += "DocumentRoot \"%s\"\n" % (self.param.shareDir)        
-        buf += "\n"        
-        buf += "PidFile \"%s\"\n" % (os.path.join(apacheDir, "apache.pid"))	
+        buf += "ServerName $(hostname)\n"
+        buf += "DocumentRoot \"%s\"\n" % (self.param.shareDir)
+        buf += "\n"
+        buf += "PidFile \"%s\"\n" % (os.path.join(apacheDir, "apache.pid"))
         buf += "ErrorLog \"%s\"\n" % (os.path.join(apacheDir, "error.log"))
         buf += "LogFormat \"%h %l %u %t \\\"%r\\\" %>s %b \\\"%{Referer}i\\\" \\\"%{User-Agent}i\\\"\" common\n"
         buf += "CustomLog \"%s\" common\n" % (os.path.join(apacheDir, "access.log"))
@@ -88,10 +88,10 @@ class FwpDaemon:
         buf += "\n"
         buf += "Listen %d https\n" % (self.param.listenPort)
         buf += "\n"
-        buf += "SSLEngine on\n"        
+        buf += "SSLEngine on\n"
         buf += "SSLProtocol all\n"
         buf += "SSLCertificateFile \"%s\"\n" % (self.param.certFile)
-        buf += "SSLCertificateKeyFile \"%s\"\n" % (self.param.keyFile)
+        buf += "SSLCertificateKeyFile \"%s\"\n" % (self.param.privkeyFile)
         buf += "\n"
         buf += "<Directory \"%s\">\n" % (self.param.shareDir)
         buf += "    AuthType Basic\n"
