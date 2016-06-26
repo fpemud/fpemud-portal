@@ -45,6 +45,15 @@ class FwpUtil:
         os.mkdir(dirname)
 
     @staticmethod
+    def readFile(filename):
+        """Read file, returns the whold content"""
+
+        f = open(filename, 'r')
+        buf = f.read()
+        f.close()
+        return buf
+
+    @staticmethod
     def shell(cmd, flags=""):
         """Execute shell command"""
 
@@ -151,6 +160,26 @@ class FwpUtil:
         el = ip.split(".")
         assert len(el) == 4
         return (AF_INET, [bytes([int(x)]) for x in el])
+
+    @staticmethod
+    def getFreeSocketPort(portType, portStart, portEnd):
+        if portType == "tcp":
+            sType = socket.SOCK_STREAM
+        elif portType == "udp":
+            assert False
+        else:
+            assert False
+
+        for port in range(portStart, portEnd + 1):
+            s = socket.socket(socket.AF_INET, sType)
+            try:
+                s.bind((('', port)))
+                return port
+            except socket.error:
+                continue
+            finally:
+                s.close()
+        raise Exception("No valid %s port in [%d,%d]." % (portType, portStart, portEnd))
 
     @staticmethod
     def printInfo(msgStr):

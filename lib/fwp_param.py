@@ -10,7 +10,10 @@ class FwpParam:
         self.libDir = "/usr/lib/fpemud-portal"
         self.shareDir = "/usr/share/fpemud-portal"
         self.varDir = "/var/fpemud-portal"
+        self.runDir = "/run/fpemud-portal"
         self.tmpDir = "/tmp/fpemud-portal"
+
+        self.gitlabDir = os.path.join(self.varDir, "gitlab")
 
         self.user = "fpemud-portal"
         self.group = "fpemud-portal"

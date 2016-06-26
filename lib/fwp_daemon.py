@@ -92,10 +92,10 @@ class FwpDaemon:
         buf += "PassengerRoot /usr/lib64/ruby/vendor_ruby/phusion_passenger/locations.ini\n"
         buf += "PassengerDefaultRuby /usr/bin/ruby\n"
 
-#RailsBaseURI /gitlab
-#<Directory /var/www/gitlab>
+# RailsBaseURI /gitlab
+# <Directory /var/www/gitlab>
 #    Options -MultiViews
-#</Directory>
+# </Directory>
 
         buf += "\n"
         if self.param.httpRedirect:
