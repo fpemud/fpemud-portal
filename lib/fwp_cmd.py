@@ -10,7 +10,7 @@ class FwpCmd:
 
     def __init__(self, param):
         self.param = param
-        self.servGitlab = FwpServiceGitlab()
+        self.servGitlab = FwpServiceGitlab(self.param)
 
     def cmdInit(self):
         if not os.path.exists(self.param.gitlabDir):

@@ -89,9 +89,12 @@ class FwpUtil:
         assert False
 
     @staticmethod
-    def ensureDir(dirname):
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
+    def makeDir(dirname, user, group):
+        if os.path.exists(dirname):
+            return
+        FwpCommon.makeDir(os.path.dirname(dirname))
+        os.mkdir(dirname)
+        FwpUtil.shell("/bin/chown %s:%s \"%s\"" % (user, group, dirname))
 
     @staticmethod
     def interfaceExists(intfName):

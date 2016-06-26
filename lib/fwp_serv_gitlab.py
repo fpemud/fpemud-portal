@@ -11,10 +11,14 @@ from fwp_common import FwpCommon
 
 class FwpServiceGitlab:
 
+    """
+    This service is for hosting my private projects.
+    """
+
     def __init__(self, param):
         self.param = param
 
-        self.verCurFile = os.path.join(glob.glob("/opt/gitlab-*")[0], "VERSION")
+        self.verCurFile = os.path.join(glob.glob("/opt/gitlabhq-*")[0], "VERSION")
         self.verRecFile = os.path.join(self.param.gitlabDir, "VERSION")
 
         self.dbCfgDir = os.path.join(self.param.gitlabDir, "config-mysql")
@@ -33,7 +37,7 @@ class FwpServiceGitlab:
         if os.path.exists(self.param.gitlabDir):
             return
 
-        FwpCommon.makeDir(self.param.gitlabDir)
+        FwpCommon.makeDir(self.param.gitlabDir, "git", "git")
         try:
             # create mariadb config file
             self._generateMariaDbCfgFile()
@@ -45,7 +49,7 @@ class FwpServiceGitlab:
             self._mountOverlayFs()
             dbProc = None
             try:
-                FwpCommon.makeDir(self.dbDataDir)
+                FwpUtil.makeDir(self.dbDataDir, "git", "git")
                 dbProc = self._runMariaDb()
                 FwpUtil.shell("/usr/bin/ruby21 /usr/bin/bundle exec rake gitlab:setup RAILS_ENV=production")
             finally:
@@ -55,8 +59,8 @@ class FwpServiceGitlab:
                 self._umountOverlayFs()
 
             # create gitlab directories
-            FwpCommon.makeDir(self.repoDir)
-            FwpCommon.makeDir(self.lfsObjDir)
+            FwpUtil.makeDir(self.repoDir, "git", "git")
+            FwpUtil.makeDir(self.lfsObjDir, "git", "git")
 
             # record version
             shutil.copy2(self.verCurFile, self.verRecFile)
