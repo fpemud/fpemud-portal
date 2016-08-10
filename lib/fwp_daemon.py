@@ -11,12 +11,14 @@ import subprocess
 from gi.repository import GLib
 from fwp_util import FwpUtil
 from fwp_util import StdoutRedirector
+from fwp_serv_git_mirror import FwpServiceGitMirror
 
 
 class FwpDaemon:
 
     def __init__(self, param):
         self.param = param
+        self.servList = []
         self.apacheProc = None
 
     def run(self):
@@ -28,7 +30,21 @@ class FwpDaemon:
             logging.getLogger().addHandler(logging.StreamHandler(sys.stderr))
             logging.getLogger().setLevel(logging.INFO)
 
+            # create services
+            self.servList.append(FwpServiceGitMirror())
+
+            # start services
+            for serv in self.servList:
+                serv.start()
+
             # start apache
+            os.mkdir(self.param.apacheDir)
+            os.mkdir(self.param.apacheSubSiteCfgDir)
+            for i in range(0, len(self.servList)):
+                serv = self.servList[i]
+                fn = os.path.join(self.param.apacheSubSiteCfgDir, "%02d-%s.conf" % (i + 1, serv.getName()))
+                with open(fn, "w") as f:
+                    f.write(serv.getApacheConfSnippet())
             self.apacheProc = self._runApache()
             logging.info("apache started.")
 
@@ -44,6 +60,15 @@ class FwpDaemon:
             self.param.mainloop.run()
             logging.info("Mainloop exits.")
         finally:
+            if self.apacheProc is not None:
+                self.apacheProc.terminate()
+                self.apacheProc.wait()
+
+            i = len(self.servList) - 1
+            while i >= 0:
+                self.servList[i].stop()
+                i = i - 1
+
             logging.shutdown()
             shutil.rmtree(self.param.tmpDir)
 
@@ -56,10 +81,6 @@ class FwpDaemon:
         self.param.mainloop.quit()
 
     def _runApache(self):
-        # make apache root directory
-        apacheDir = os.path.join(self.param.tmpDir, "apache")
-        os.mkdir(apacheDir)
-
         # generate apache config file
         buf = ""
         buf += "LoadModule alias_module           /usr/lib/apache2/modules/mod_alias.so\n"
@@ -86,10 +107,10 @@ class FwpDaemon:
         buf += "ServerName %s\n" % (socket.gethostname())
         buf += "DocumentRoot \"%s\"\n" % (self.param.shareDir)
         buf += "\n"
-        buf += "PidFile \"%s\"\n" % (os.path.join(apacheDir, "apache.pid"))
-        buf += "ErrorLog \"%s\"\n" % (os.path.join(apacheDir, "error.log"))
+        buf += "PidFile \"%s\"\n" % (os.path.join(self.param.apacheDir, "apache.pid"))
+        buf += "ErrorLog \"%s\"\n" % (os.path.join(self.param.apacheDir, "error.log"))
         buf += "LogFormat \"%h %l %u %t \\\"%r\\\" %>s %b \\\"%{Referer}i\\\" \\\"%{User-Agent}i\\\"\" common\n"
-        buf += "CustomLog \"%s\" common\n" % (os.path.join(apacheDir, "access.log"))
+        buf += "CustomLog \"%s\" common\n" % (os.path.join(self.param.apacheDir, "access.log"))
         buf += "\n"
         buf += "User %s\n" % (self.param.user)
         buf += "Group %s\n" % (self.param.group)
@@ -101,12 +122,16 @@ class FwpDaemon:
         buf += "    Options +ExecCGI\n"
         buf += "</Directory>\n"
         buf += "\n"
-        buf += "Include \"%s\"\n" % (self.apacheSiteCfgDir)
-        buf += "\n"
+        buf += "Include \"%s\"\n" % (self.param.apacheSiteCfgDir)
+        cfgf = os.path.join(self.param.apacheDir, "httpd.conf")
+        with open(cfgf, "w") as f:
+            f.write(buf)
 
+        # run apache process
+        cmd = "/usr/sbin/apache2 -d \"%s\" -f \"%s\" -DFOREGROUND" % (self.param.apacheDir, cfgf)
+        proc = subprocess.Popen(cmd, shell=True, universal_newlines=True)
 
-
-
+        return proc
 
 
 # RailsBaseURI /gitlab
@@ -114,39 +139,30 @@ class FwpDaemon:
 #    Options -MultiViews
 # </Directory>
 
-        buf += "\n"
-        if self.param.httpRedirect:
-            buf += "Listen 80 http\n"
-            buf += "\n"
-            buf += "<VirtualHost *:80>\n"
-            buf += "    RewriteEngine On\n"
-            buf += "    RewriteCond %{HTTPS} off\n"
-            buf += "    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI}\n"
-            buf += "</VirtualHost>\n"
-        if True:
-            buf += "Listen 443 https\n"
-            buf += "\n"
-            buf += "<VirtualHost *:443>\n"
-            buf += "    SSLEngine on\n"
-            buf += "    SSLProtocol all\n"
-            buf += "    SSLCertificateFile \"%s\"\n" % (self.param.certFile)
-            buf += "    SSLCertificateKeyFile \"%s\"\n" % (self.param.privkeyFile)
-            buf += "    \n"
-            buf += "    <Directory \"%s\">\n" % (self.param.shareDir)
-            buf += "        AllowOverride None\n"
-            buf += "        AuthType Basic\n"
-            buf += "        AuthName \"Web Portal for Fpemud\"\n"
-            buf += "        AuthBasicProvider file\n"
-            buf += "        AuthUserFile \"%s\"\n" % (self.param.htpasswdFile)
-            buf += "        Require valid-user\n"
-            buf += "    </Directory>\n"
-            buf += "</VirtualHost>\n"
-        cfgf = os.path.join(apacheDir, "httpd.conf")
-        with open(cfgf, "w") as f:
-            f.write(buf)
-
-        # run apache process
-        cmd = "/usr/sbin/apache2 -d \"%s\" -f \"%s\" -DFOREGROUND" % (apacheDir, cfgf)
-        proc = subprocess.Popen(cmd, shell=True, universal_newlines=True)
-
-        return proc
+        # buf += "\n"
+        # if self.param.httpRedirect:
+        #     buf += "Listen 80 http\n"
+        #     buf += "\n"
+        #     buf += "<VirtualHost *:80>\n"
+        #     buf += "    RewriteEngine On\n"
+        #     buf += "    RewriteCond %{HTTPS} off\n"
+        #     buf += "    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI}\n"
+        #     buf += "</VirtualHost>\n"
+        # if True:
+        #     buf += "Listen 443 https\n"
+        #     buf += "\n"
+        #     buf += "<VirtualHost *:443>\n"
+        #     buf += "    SSLEngine on\n"
+        #     buf += "    SSLProtocol all\n"
+        #     buf += "    SSLCertificateFile \"%s\"\n" % (self.param.certFile)
+        #     buf += "    SSLCertificateKeyFile \"%s\"\n" % (self.param.privkeyFile)
+        #     buf += "    \n"
+        #     buf += "    <Directory \"%s\">\n" % (self.param.shareDir)
+        #     buf += "        AllowOverride None\n"
+        #     buf += "        AuthType Basic\n"
+        #     buf += "        AuthName \"Web Portal for Fpemud\"\n"
+        #     buf += "        AuthBasicProvider file\n"
+        #     buf += "        AuthUserFile \"%s\"\n" % (self.param.htpasswdFile)
+        #     buf += "        Require valid-user\n"
+        #     buf += "    </Directory>\n"
+        #     buf += "</VirtualHost>\n"

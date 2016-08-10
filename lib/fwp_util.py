@@ -89,14 +89,6 @@ class FwpUtil:
         assert False
 
     @staticmethod
-    def makeDir(dirname, user, group):
-        if os.path.exists(dirname):
-            return
-        FwpCommon.makeDir(os.path.dirname(dirname))
-        os.mkdir(dirname)
-        FwpUtil.shell("/bin/chown %s:%s \"%s\"" % (user, group, dirname))
-
-    @staticmethod
     def interfaceExists(intfName):
         ret = FwpUtil.shell("/bin/ifconfig", "stdout")
         return re.search("^%s: " % (intfName), ret, re.M) is not None

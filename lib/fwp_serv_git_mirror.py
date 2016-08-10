@@ -1,12 +1,16 @@
 #!/usr/bin/python3
 # -*- coding: utf-8; tab-width: 4; indent-tabs-mode: t -*-
 
+import os
+from fwp_common import FwpCommon
+
+
 class FwpServiceGitMirror:
 
     """
     This service is to provide a git mirror for:
       1. github.com
-      2. 
+      2.
     """
 
     def __init__(self, param):
@@ -17,6 +21,9 @@ class FwpServiceGitMirror:
         self.myVarDir = os.path.join(self.param.varDir, "git-mirror")
         self.myVarDataDir = os.path.join(self.myVarDir, "root")
         self.myVarTmpDir = os.path.join(self.myVarDir, "tmp")
+
+    def getName(self):
+        return "git-mirror"
 
     def start(self):
         FwpCommon.makeDir(self.myTmpDir)
@@ -39,8 +46,6 @@ class FwpServiceGitMirror:
         buf += "        Options +ExecCGI\n"
         buf += "    </Location>\n"
         buf += "</Location>\n"
-
-
 
     def _genGitWebCfg(self):
         buf = ""
