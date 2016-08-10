@@ -31,7 +31,7 @@ class FwpDaemon:
             logging.getLogger().setLevel(logging.INFO)
 
             # create services
-            self.servList.append(FwpServiceGitMirror())
+            self.servList.append(FwpServiceGitMirror(self.param))
 
             # start services
             for serv in self.servList:
@@ -87,7 +87,7 @@ class FwpDaemon:
         buf += "LoadModule log_config_module      /usr/lib/apache2/modules/mod_log_config.so\n"
         buf += "LoadModule env_module             /usr/lib/apache2/modules/mod_env.so\n"
         buf += "LoadModule dir_module             /usr/lib/apache2/modules/mod_dir.so\n"
-        buf += "LoadModule mime_module            /usr/lib/apache2/modules/mod_mime.so\n"
+        #buf += "LoadModule mime_module            /usr/lib/apache2/modules/mod_mime.so\n"
         buf += "LoadModule unixd_module           /usr/lib/apache2/modules/mod_unixd.so\n"
         buf += "\n"
         buf += "LoadModule rewrite_module         /usr/lib/apache2/modules/mod_rewrite.so\n"
@@ -100,8 +100,6 @@ class FwpDaemon:
         buf += "\n"
         buf += "LoadModule cgi_module             /usr/lib/apache2/modules/mod_cgi.so\n"
         buf += "LoadModule passenger_module       /usr/lib/apache2/modules/mod_passenger.so\n"
-        buf += "\n"
-        buf += "AddHandler cgi-script .cgi\n"
         buf += "\n"
         buf += "\n"
         buf += "ServerName %s\n" % (socket.gethostname())
@@ -122,7 +120,33 @@ class FwpDaemon:
         buf += "    Options +ExecCGI\n"
         buf += "</Directory>\n"
         buf += "\n"
-        buf += "Include \"%s\"\n" % (self.param.apacheSiteCfgDir)
+        if self.param.httpRedirect:
+            buf += "Listen 80 http\n"
+            buf += "<VirtualHost *:80>\n"
+            buf += "    RewriteEngine On\n"
+            buf += "    RewriteCond %{HTTPS} off\n"
+            buf += "    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI}\n"
+            buf += "</VirtualHost>\n"
+            buf += "\n"
+        if True:
+            buf += "Listen 443 https\n"
+            buf += "<VirtualHost *:443>\n"
+            buf += "    SSLEngine on\n"
+            buf += "    SSLProtocol all\n"
+            buf += "    SSLCertificateFile \"%s\"\n" % (self.param.certFile)
+            buf += "    SSLCertificateKeyFile \"%s\"\n" % (self.param.privkeyFile)
+            buf += "    \n"
+            buf += "    <Directory \"%s\">\n" % (self.param.shareDir)
+            buf += "        AllowOverride None\n"
+            buf += "        AuthType Basic\n"
+            buf += "        AuthName \"Web Portal for Fpemud\"\n"
+            buf += "        AuthBasicProvider file\n"
+            buf += "        AuthUserFile \"%s\"\n" % (self.param.htpasswdFile)
+            buf += "        Require valid-user\n"
+            buf += "    </Directory>\n"
+            buf += "</VirtualHost>\n"
+            buf += "\n"
+        buf += "Include \"%s\"\n" % (self.param.apacheSubSiteCfgDir)
         cfgf = os.path.join(self.param.apacheDir, "httpd.conf")
         with open(cfgf, "w") as f:
             f.write(buf)
@@ -138,31 +162,3 @@ class FwpDaemon:
 # <Directory /var/www/gitlab>
 #    Options -MultiViews
 # </Directory>
-
-        # buf += "\n"
-        # if self.param.httpRedirect:
-        #     buf += "Listen 80 http\n"
-        #     buf += "\n"
-        #     buf += "<VirtualHost *:80>\n"
-        #     buf += "    RewriteEngine On\n"
-        #     buf += "    RewriteCond %{HTTPS} off\n"
-        #     buf += "    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI}\n"
-        #     buf += "</VirtualHost>\n"
-        # if True:
-        #     buf += "Listen 443 https\n"
-        #     buf += "\n"
-        #     buf += "<VirtualHost *:443>\n"
-        #     buf += "    SSLEngine on\n"
-        #     buf += "    SSLProtocol all\n"
-        #     buf += "    SSLCertificateFile \"%s\"\n" % (self.param.certFile)
-        #     buf += "    SSLCertificateKeyFile \"%s\"\n" % (self.param.privkeyFile)
-        #     buf += "    \n"
-        #     buf += "    <Directory \"%s\">\n" % (self.param.shareDir)
-        #     buf += "        AllowOverride None\n"
-        #     buf += "        AuthType Basic\n"
-        #     buf += "        AuthName \"Web Portal for Fpemud\"\n"
-        #     buf += "        AuthBasicProvider file\n"
-        #     buf += "        AuthUserFile \"%s\"\n" % (self.param.htpasswdFile)
-        #     buf += "        Require valid-user\n"
-        #     buf += "    </Directory>\n"
-        #     buf += "</VirtualHost>\n"

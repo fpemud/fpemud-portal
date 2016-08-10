@@ -11,7 +11,7 @@ class FwpCommon:
     def makeDir(param, dirname):
         if os.path.exists(dirname):
             return
-        FwpCommon.makeDir(os.path.dirname(dirname))
+        FwpCommon.makeDir(param, os.path.dirname(dirname))
         os.mkdir(dirname)
         FwpUtil.shell("/bin/chown %s:%s \"%s\"" % (param.user, param.group, dirname))
 

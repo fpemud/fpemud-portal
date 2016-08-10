@@ -26,9 +26,9 @@ class FwpServiceGitMirror:
         return "git-mirror"
 
     def start(self):
-        FwpCommon.makeDir(self.myTmpDir)
-        FwpCommon.makeDir(self.myVarDataDir)
-        FwpCommon.makeDir(self.myVarTmpDir)
+        FwpCommon.makeDir(self.param, self.myTmpDir)
+        FwpCommon.makeDir(self.param, self.myVarDataDir)
+        FwpCommon.makeDir(self.param, self.myVarTmpDir)
 
         self._genGitWebCfg()
 
@@ -38,21 +38,19 @@ class FwpServiceGitMirror:
     def getApacheConfSnippet(self):
         buf = ""
         buf += "<Location /git-mirror>\n"
-        buf += "    PassEnv GIT_DIR\n"
-        buf += "    PassEnv GIT_EXEC_PATH\n"
-        buf += "    PassEnv GITWEB_CONFIG\n"
+        # buf += "    SetEnv GIT_DIR\n"
+        # buf += "    SetEnv GIT_EXEC_PATH\n"
+        # buf += "    SetEnv GITWEB_CONFIG\n"
         buf += "    DirectoryIndex gitweb.cgi\n"
-        buf += "    <Location /git-mirror/gitweb.cgi>\n"
-        buf += "        Options +ExecCGI\n"
-        buf += "    </Location>\n"
         buf += "</Location>\n"
+        return buf
 
     def _genGitWebCfg(self):
         buf = ""
         buf += "#!/usr/bin/perl\n"
         buf += "\n"
-        buf += "our $projectroot = \"%s\";\n" % (self.myRootDir)
-        buf += "our $git_temp = \"%s\";\n" % (self.myTmpDir)
+        buf += "our $projectroot = \"%s\";\n" % (self.myVarDataDir)
+        buf += "our $git_temp = \"%s\";\n" % (self.myVarTmpDir)
         buf += "our $projects_list = $projectroot;\n"
         buf += "\n"
         buf += "$feature{'remote_heads'}{'default'} = [1];\n"
