@@ -65,6 +65,8 @@ class FwpDaemon:
         buf += "LoadModule alias_module           /usr/lib/apache2/modules/mod_alias.so\n"
         buf += "LoadModule log_config_module      /usr/lib/apache2/modules/mod_log_config.so\n"
         buf += "LoadModule env_module             /usr/lib/apache2/modules/mod_env.so\n"
+        buf += "LoadModule dir_module             /usr/lib/apache2/modules/mod_dir.so\n"
+        buf += "LoadModule mime_module            /usr/lib/apache2/modules/mod_mime.so\n"
         buf += "LoadModule unixd_module           /usr/lib/apache2/modules/mod_unixd.so\n"
         buf += "\n"
         buf += "LoadModule rewrite_module         /usr/lib/apache2/modules/mod_rewrite.so\n"
@@ -75,7 +77,10 @@ class FwpDaemon:
         buf += "LoadModule authz_core_module      /usr/lib/apache2/modules/mod_authz_core.so\n"
         buf += "LoadModule authz_user_module      /usr/lib/apache2/modules/mod_authz_user.so\n"
         buf += "\n"
+        buf += "LoadModule cgi_module             /usr/lib/apache2/modules/mod_cgi.so\n"
         buf += "LoadModule passenger_module       /usr/lib/apache2/modules/mod_passenger.so\n"
+        buf += "\n"
+        buf += "AddHandler cgi-script .cgi\n"
         buf += "\n"
         buf += "\n"
         buf += "ServerName %s\n" % (socket.gethostname())
@@ -91,6 +96,18 @@ class FwpDaemon:
         buf += "\n"
         buf += "PassengerRoot /usr/lib64/ruby/vendor_ruby/phusion_passenger/locations.ini\n"
         buf += "PassengerDefaultRuby /usr/bin/ruby\n"
+        buf += "\n"
+        buf += "<Directory /usr/share/gitweb/gitweb.cgi>\n"
+        buf += "    Options +ExecCGI\n"
+        buf += "</Directory>\n"
+        buf += "\n"
+        buf += "Include \"%s\"\n" % (self.apacheSiteCfgDir)
+        buf += "\n"
+
+
+
+
+
 
 # RailsBaseURI /gitlab
 # <Directory /var/www/gitlab>

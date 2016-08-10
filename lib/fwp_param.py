@@ -13,6 +13,8 @@ class FwpParam:
         self.runDir = "/run/fpemud-portal"
         self.tmpDir = "/tmp/fpemud-portal"
 
+        self.apacheSiteCfgDir = os.path.join(self.tmpDir, "httpd-conf.d")
+
         self.gitlabDir = os.path.join(self.varDir, "gitlab")
 
         self.user = "fpemud-portal"
